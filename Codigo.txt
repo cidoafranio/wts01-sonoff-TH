@@ -1,0 +1,48 @@
+/*
+O Sonoff WTS01 é um sensor de temperatura à prova d’água projetado para aprimorar a monitorização de temperatura em dispositivos SONOFF TH Origin/Elite. 
+Aqui um codigo para fazer a leitura de alguns dados do WTS01.
+Criado por Cido em Afrânio-PE Brasil.
+
+The Sonoff WTS01 is a waterproof temperature sensor designed to enhance temperature monitoring on SONOFF TH Origin/Elite devices.
+Here is a code to read some data from the WTS01.
+Created by Cido in Afrânio-PE Brazil.
+*/
+
+#include <HardwareSerial.h>
+HardwareSerial SerialPort(2);  //UART2
+const uint8_t POW_PIN = 27;
+const int baudRates[] = {9600};
+const int baudRatesCount = sizeof(baudRates) / sizeof(baudRates[0]);
+int currentBaudRateIndex = 0;
+unsigned long previousMillis = 0;
+const long interval = 5000;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(POW_PIN, OUTPUT);
+  digitalWrite(POW_PIN, HIGH);
+  SerialPort.begin(baudRates[currentBaudRateIndex], SERIAL_8N1, 25, 17);
+  Serial.print("Inicializando com baud rate: ");
+  Serial.println(baudRates[currentBaudRateIndex]);
+}
+void loop() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    currentBaudRateIndex++;
+    if (currentBaudRateIndex >= baudRatesCount) {
+      currentBaudRateIndex = 0;
+    }
+    SerialPort.end();                                                       
+    SerialPort.begin(baudRates[currentBaudRateIndex], SERIAL_8N1, 25, 17);  
+    Serial.print("Mudando para baud rate: ");
+    Serial.println(baudRates[currentBaudRateIndex]);
+  }
+  if (SerialPort.available()) {
+    int number = SerialPort.read();
+    Serial.print("Número recebido (HEX): ");
+    Serial.print(number, HEX);
+    Serial.print(" (DEC): ");
+    Serial.println(number);
+  }
+}
